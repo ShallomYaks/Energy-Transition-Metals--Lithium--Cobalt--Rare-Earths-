@@ -92,6 +92,12 @@ clarinet console
 (contract-call? .energy-transition-metals get-supply-chain-record u1)
 ```
 
+### Get Certification Count
+```clarity
+(contract-call? .energy-transition-metals get-certification-count u1)
+```
+Returns the number of certifications for a batch.
+
 ## ⚖️ Compliance Rules
 
 Set trade compliance rules for different metal types:

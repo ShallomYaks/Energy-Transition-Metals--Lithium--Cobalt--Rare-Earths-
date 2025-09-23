@@ -322,6 +322,13 @@
   )
 )
 
+(define-read-only (get-certification-count (batch-id uint))
+  (match (map-get? mineral-batches batch-id)
+    batch-data (len (get certification-ids batch-data))
+    u0
+  )
+)
+
 (define-public (get-batch-certifications (batch-id uint))
   (match (map-get? mineral-batches batch-id)
     batch-data (ok (get certification-ids batch-data))
