@@ -155,6 +155,19 @@ clarinet test
 
 This project is open source and available under the MIT License.
 
+## 🗂️ Batch Retirement Feature
+
+This new feature allows the current owner of a mineral batch to retire it, marking the end of its lifecycle. This enhances traceability by recording the retirement event in the supply chain records and updating the batch status to "retired".
+
+### Usage
+```clarity
+(contract-call? .energy-transition-metals retire-batch
+  u1
+  "Disposal Facility")
+```
+
+This function ensures that only the current owner can retire the batch and prevents retiring already retired batches.
+
 ---
 
 *Made with 💚 for sustainable mining practices*

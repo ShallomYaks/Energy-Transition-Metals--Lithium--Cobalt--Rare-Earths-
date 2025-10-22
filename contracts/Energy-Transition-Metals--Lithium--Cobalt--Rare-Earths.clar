@@ -335,3 +335,32 @@
     err-not-found
   )
 )
+
+(define-public (retire-batch
+  (batch-id uint)
+  (location (string-ascii 100))
+)
+  (let (
+    (batch-data (unwrap! (map-get? mineral-batches batch-id) err-not-found))
+    (current-records (default-to (list) (map-get? supply-chain-records batch-id)))
+  )
+    (asserts! (is-eq tx-sender (get current-owner batch-data)) err-unauthorized)
+    (asserts! (not (is-eq (get status batch-data) "retired")) err-invalid-batch)
+    (let (
+      (new-record {
+        timestamp: stacks-block-height,
+        location: location,
+        handler: tx-sender,
+        action: "retirement",
+        quality-check: true,
+        temperature: none,
+        humidity: none
+      })
+      (updated-records (unwrap! (as-max-len? (append current-records new-record) u20) err-invalid-transfer))
+    )
+      (map-set mineral-batches batch-id (merge batch-data {status: "retired"}))
+      (map-set supply-chain-records batch-id updated-records)
+    )
+    (ok true)
+  )
+)
