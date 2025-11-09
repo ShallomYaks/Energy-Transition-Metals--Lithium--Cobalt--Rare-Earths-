@@ -143,6 +143,7 @@ clarinet test
 - 🔐 Authorization checks for certifiers
 - 📝 Immutable audit trails
 - ⚖️ Compliance validation before transfers
+- ⏸️ Emergency pause mechanism for critical situations
 
 ## 🤝 Contributing
 
@@ -167,6 +168,42 @@ This new feature allows the current owner of a mineral batch to retire it, marki
 ```
 
 This function ensures that only the current owner can retire the batch and prevents retiring already retired batches.
+
+## 🚨 Emergency Pause Mechanism
+
+This new feature introduces a circuit breaker pattern that allows the contract owner to pause all critical operations in emergency situations, such as detected vulnerabilities or market disruptions. When paused, all state-changing functions are disabled while read-only functions remain accessible.
+
+### Usage
+
+#### Check Pause Status
+```clarity
+(contract-call? .energy-transition-metals is-contract-paused)
+```
+
+#### Pause Contract (Owner Only)
+```clarity
+(contract-call? .energy-transition-metals pause-contract)
+```
+
+#### Unpause Contract (Owner Only)
+```clarity
+(contract-call? .energy-transition-metals unpause-contract)
+```
+
+### Affected Functions
+When the contract is paused, the following functions will return an error:
+- `register-mineral-batch`
+- `register-certifier`
+- `issue-certification`
+- `transfer-batch`
+- `update-batch-status`
+- `set-trade-compliance-rule`
+- `revoke-certification`
+- `deactivate-certifier`
+- `update-ethical-score`
+- `retire-batch`
+
+This mechanism provides an additional layer of security, allowing immediate response to potential threats while maintaining data integrity and accessibility for auditing purposes.
 
 ---
 

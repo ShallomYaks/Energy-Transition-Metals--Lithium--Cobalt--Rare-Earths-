@@ -6,8 +6,10 @@
 (define-constant err-already-exists (err u104))
 (define-constant err-invalid-certification (err u105))
 (define-constant err-invalid-transfer (err u106))
+(define-constant err-paused (err u107))
 
 (define-data-var next-batch-id uint u1)
+(define-data-var contract-paused bool false)
 (define-data-var next-certification-id uint u1)
 
 (define-map mineral-batches
@@ -114,6 +116,30 @@
   (var-get next-certification-id)
 )
 
+(define-read-only (is-contract-paused)
+  (var-get contract-paused)
+)
+
+(define-public (pause-contract)
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (var-set contract-paused true)
+    (ok true)
+  )
+)
+
+(define-public (unpause-contract)
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (var-set contract-paused false)
+    (ok true)
+  )
+)
+
+(define-private (assert-not-paused)
+  (ok (asserts! (not (var-get contract-paused)) err-paused))
+)
+
 (define-public (register-mineral-batch
   (metal-type (string-ascii 20))
   (quantity uint)
@@ -125,6 +151,7 @@
   (let (
     (batch-id (var-get next-batch-id))
   )
+    (try! (assert-not-paused))
     (asserts! (> quantity u0) err-invalid-batch)
     (asserts! (<= ethical-score u100) err-invalid-batch)
     (map-set mineral-batches batch-id {
@@ -158,6 +185,7 @@
   (certification-types (list 5 (string-ascii 30)))
 )
   (begin
+    (try! (assert-not-paused))
     (asserts! (is-eq tx-sender contract-owner) err-owner-only)
     (asserts! (is-none (map-get? authorized-certifiers certifier)) err-already-exists)
     (map-set authorized-certifiers certifier {
@@ -181,6 +209,7 @@
     (batch-data (unwrap! (map-get? mineral-batches batch-id) err-not-found))
     (certifier-data (unwrap! (map-get? authorized-certifiers tx-sender) err-unauthorized))
   )
+    (try! (assert-not-paused))
     (asserts! (get is-active certifier-data) err-unauthorized)
     (asserts! (is-some (index-of (get certification-types certifier-data) certification-type)) err-invalid-certification)
     (asserts! (> expiry-date stacks-block-height) err-invalid-certification)
@@ -214,6 +243,7 @@
     (batch-data (unwrap! (map-get? mineral-batches batch-id) err-not-found))
     (current-records (default-to (list) (map-get? supply-chain-records batch-id)))
   )
+    (try! (assert-not-paused))
     (asserts! (is-eq tx-sender (get current-owner batch-data)) err-unauthorized)
     (asserts! (is-batch-compliant batch-id) err-invalid-transfer)
     (let (
@@ -247,6 +277,7 @@
     (batch-data (unwrap! (map-get? mineral-batches batch-id) err-not-found))
     (current-records (default-to (list) (map-get? supply-chain-records batch-id)))
   )
+    (try! (assert-not-paused))
     (asserts! (is-eq tx-sender (get current-owner batch-data)) err-unauthorized)
     (let (
       (new-record {
@@ -275,6 +306,7 @@
   (restricted-origins (list 10 (string-ascii 100)))
 )
   (begin
+    (try! (assert-not-paused))
     (asserts! (is-eq tx-sender contract-owner) err-owner-only)
     (asserts! (<= min-ethical-score u100) err-invalid-batch)
     (map-set trade-compliance-rules metal-type {
@@ -292,6 +324,7 @@
   (let (
     (cert-data (unwrap! (map-get? certifications cert-id) err-not-found))
   )
+    (try! (assert-not-paused))
     (asserts! (is-eq tx-sender (get issuer cert-data)) err-unauthorized)
     (map-set certifications cert-id (merge cert-data {is-valid: false}))
     (ok true)
@@ -302,19 +335,21 @@
   (let (
     (certifier-data (unwrap! (map-get? authorized-certifiers certifier) err-not-found))
   )
+    (try! (assert-not-paused))
     (asserts! (is-eq tx-sender contract-owner) err-owner-only)
     (map-set authorized-certifiers certifier (merge certifier-data {is-active: false}))
     (ok true)
   )
 )
 
-(define-public (update-ethical-score 
-  (batch-id uint) 
+(define-public (update-ethical-score
+  (batch-id uint)
   (new-score uint)
 )
   (let (
     (batch-data (unwrap! (map-get? mineral-batches batch-id) err-not-found))
   )
+    (try! (assert-not-paused))
     (asserts! (is-eq tx-sender (get current-owner batch-data)) err-unauthorized)
     (asserts! (<= new-score u100) err-invalid-batch)
     (map-set mineral-batches batch-id (merge batch-data {ethical-score: new-score}))
@@ -344,6 +379,7 @@
     (batch-data (unwrap! (map-get? mineral-batches batch-id) err-not-found))
     (current-records (default-to (list) (map-get? supply-chain-records batch-id)))
   )
+    (try! (assert-not-paused))
     (asserts! (is-eq tx-sender (get current-owner batch-data)) err-unauthorized)
     (asserts! (not (is-eq (get status batch-data) "retired")) err-invalid-batch)
     (let (
