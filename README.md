@@ -205,6 +205,17 @@ When the contract is paused, the following functions will return an error:
 
 This mechanism provides an additional layer of security, allowing immediate response to potential threats while maintaining data integrity and accessibility for auditing purposes.
 
+## 🔍 Batch Query by Metal Type
+
+This feature allows users to retrieve all batch IDs associated with a specific metal type, enhancing searchability and analytics for supply chain management.
+
+### Usage
+```clarity
+(contract-call? .energy-transition-metals get-batches-by-metal-type "lithium")
+```
+
+This returns a list of batch IDs for the specified metal type, or an empty list if none exist.
+
 ---
 
 *Made with 💚 for sustainable mining practices*

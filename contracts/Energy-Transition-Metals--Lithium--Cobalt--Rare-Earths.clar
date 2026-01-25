@@ -74,6 +74,11 @@
   }
 )
 
+(define-map metal-type-batches
+  (string-ascii 20)
+  (list 100 uint)
+)
+
 (define-read-only (get-batch (batch-id uint))
   (map-get? mineral-batches batch-id)
 )
